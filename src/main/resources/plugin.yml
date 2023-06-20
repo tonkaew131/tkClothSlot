@@ -1,0 +1,4 @@
+name: tkClothSlot
+version: '${project.version}'
+main: com.tonkaew131.tkclothslot.TkClothSlot
+api-version: '1.19'
