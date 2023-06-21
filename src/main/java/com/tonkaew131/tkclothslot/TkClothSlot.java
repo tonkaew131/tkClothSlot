@@ -2,6 +2,7 @@ package com.tonkaew131.tkclothslot;
 
 import io.papermc.paper.event.player.PlayerInventorySlotChangeEvent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -14,6 +15,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.w3c.dom.Text;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class TkClothSlot extends JavaPlugin implements Listener {
     @Override
@@ -32,7 +37,7 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
         int START = 9;
         int END = 35;
         for (int i = START; i <= END; i++) {
-            if (playerInventory.getItem(i) != null && playerInventory.getItem(i).getType() != Material.BARRIER) {
+            if (playerInventory.getItem(i) != null && !isLockedItem(playerInventory.getItem(i))) {
                 player.getWorld().dropItemNaturally(player.getLocation(), playerInventory.getItem(i));
             }
 
@@ -55,8 +60,7 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
             return;
         }
 
-        ItemStack lockedItem = lockedItem();
-        if (clickedItem == lockedItem) {
+        if (isLockedItem(clickedItem)) {
             event.setCancelled(true);
             return;
         }
@@ -93,24 +97,6 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
 
         int totalSlotRemoved = 0;
 
-        ItemStack lockedItem = lockedItem();
-
-        int START = 9;
-        int END = 35;
-        for (int i = START; i <= END; i++) {
-            if (playerInventory.getItem(i) != null && playerInventory.getItem(i).getType() != Material.BARRIER) {
-                player.getWorld().dropItemNaturally(player.getLocation(), playerInventory.getItem(i));
-            }
-
-            playerInventory.setItem(i, lockedItem);
-        }
-        int FREE_START = 27;
-        int FREE_END = 30;
-        for (int i = FREE_START; i <= FREE_END; i++) {
-            playerInventory.setItem(i, null);
-        }
-
-
         ItemStack playerHelmet = playerInventory.getItem(39);
         if (playerHelmet != null) {
             Material helmetType = playerHelmet.getType();
@@ -143,27 +129,55 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
             if (bootsType == Material.IRON_BOOTS) totalSlotRemoved += IRON_BOOTS_UNLOCK;
         }
 
-        int SLOT_TO_REMOVED[] = {9, 18, 10, 19, 11, 20, 12, 21, 13, 22, 14, 23, 15, 24, 16, 25, 17, 26};
-        for (int i = 0; i < totalSlotRemoved; i++) {
-            playerInventory.setItem(SLOT_TO_REMOVED[i], null);
+        ItemStack lockedItem = lockedItem();
+
+        ArrayList<Integer> slotToRemoved = new ArrayList<Integer>();
+
+        int START = 9;
+        int END = 35;
+        for (int i = START; i <= END; i++) {
+            slotToRemoved.add(i);
+        }
+        int FREE_START = 27;
+        int FREE_END = 30;
+        for (int i = FREE_START; i <= FREE_END; i++) {
+            slotToRemoved.remove(slotToRemoved.indexOf(i));
         }
 
-        // player.sendMessage(Component.text("จะเพิ่ม Slot ให้ " + totalSlotRemoved));
-        // player.sendMessage(Component.text("Slot ที่ " + slotChanged + " เป็น " + itemType.toString()));
+        int SLOT_TO_ADDED[] = {9, 18, 10, 19, 11, 20, 12, 21, 13, 22, 14, 23, 15, 24, 16, 25, 17, 26};
+        for (int i = 0; i < totalSlotRemoved; i++) {
+            slotToRemoved.remove(slotToRemoved.indexOf(SLOT_TO_ADDED[i]));
+        }
+
+        // Removed Old Barrier
+        for (int i = 0; i <= 40; i++) {
+            if (playerInventory.getItem(i) != null && isLockedItem(playerInventory.getItem(i))) {
+                playerInventory.setItem(i, null);
+            }
+        }
+
+        for (int i = 0; i < slotToRemoved.size(); i++) {
+            int _slot = slotToRemoved.get(i);
+            if (playerInventory.getItem(_slot) != null && !isLockedItem(playerInventory.getItem(_slot))) {
+                player.getWorld().dropItemNaturally(player.getLocation(), playerInventory.getItem(_slot));
+            }
+
+            playerInventory.setItem(_slot, lockedItem);
+        }
     }
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
-        Player player = event.getPlayer();
+        /*Player player = event.getPlayer();
         Inventory playerInventory = player.getInventory();
 
-        int inventorySize = playerInventory.getSize();
-        for (int i = 0; i < inventorySize; i++) {
-            ItemStack item = playerInventory.getItem(i);
+        List<ItemStack> dropItems = event.getDrops();
+        dropItems.removeIf(item -> {
             if (item != null && item == lockedItem()) {
-                playerInventory.setItem(i, null);
+                return true;
             }
-        }
+            return false;
+        });*/
     }
 
     ItemStack lockedItem() {
@@ -172,5 +186,24 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
         lockedItemMeta.displayName(Component.text(""));
         lockedItem.setItemMeta(lockedItemMeta);
         return lockedItem;
+    }
+
+    boolean isLockedItem(ItemStack item) {
+        ItemMeta itemMeta = item.getItemMeta();
+        if (itemMeta == null) {
+            return false;
+        }
+
+        TextComponent itemDisplayName = (TextComponent) itemMeta.displayName();
+        String itemName = "";
+        if (itemDisplayName != null) {
+            itemName = itemDisplayName.content();
+        }
+
+        if (itemName == "" && item.getType() == Material.BARRIER) {
+            return true;
+        }
+
+        return false;
     }
 }
