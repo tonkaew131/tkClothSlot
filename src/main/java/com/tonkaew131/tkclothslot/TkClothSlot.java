@@ -4,6 +4,7 @@ import io.papermc.paper.event.player.PlayerInventorySlotChangeEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -30,6 +31,12 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         // event.getPlayer().sendMessage(Component.text("สวัสดีครับพี่น้องประชาชน, " + event.getPlayer().getName() + "!"));
         Player player = event.getPlayer();
+
+        // If Creative
+        if(player.getGameMode() == GameMode.CREATIVE) {
+            return;
+        }
+
         Inventory playerInventory = player.getInventory();
 
         ItemStack lockedItem = lockedItem();
@@ -60,6 +67,11 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
             return;
         }
 
+        // If Creative
+        if(p.getGameMode() == GameMode.CREATIVE) {
+            return;
+        }
+
         if (isLockedItem(clickedItem)) {
             event.setCancelled(true);
             return;
@@ -70,6 +82,11 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
     public void onPlayerInventoryChange(PlayerInventorySlotChangeEvent event) {
         Player player = event.getPlayer();
         int slotChanged = event.getSlot();
+
+        // If Creative
+        if(player.getGameMode() == GameMode.CREATIVE) {
+            return;
+        }
 
         // Not Armor Slot
         /*
@@ -166,9 +183,9 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
         }
     }
 
-    @EventHandler
+    /*@EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
-        /*Player player = event.getPlayer();
+        Player player = event.getPlayer();
         Inventory playerInventory = player.getInventory();
 
         List<ItemStack> dropItems = event.getDrops();
@@ -177,11 +194,11 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
                 return true;
             }
             return false;
-        });*/
-    }
+        });
+    }*/
 
     ItemStack lockedItem() {
-        ItemStack lockedItem = new ItemStack(Material.BARRIER);
+        ItemStack lockedItem = new ItemStack(Material.ECHO_SHARD);
         ItemMeta lockedItemMeta = lockedItem.getItemMeta();
         lockedItemMeta.displayName(Component.text(""));
         lockedItem.setItemMeta(lockedItemMeta);
@@ -194,7 +211,12 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
             return false;
         }
 
-        TextComponent itemDisplayName = (TextComponent) itemMeta.displayName();
+        if(item.getType() == Material.ECHO_SHARD) {
+            return true;
+        }
+
+        return false;
+        /*TextComponent itemDisplayName = (TextComponent) itemMeta.displayName();
         String itemName = "";
         if (itemDisplayName != null) {
             itemName = itemDisplayName.content();
@@ -204,6 +226,6 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
             return true;
         }
 
-        return false;
+        return false;*/
     }
 }
