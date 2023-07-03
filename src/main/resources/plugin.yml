@@ -1,4 +1,4 @@
 name: tkClothSlot
 version: '${project.version}'
-main: com.tonkaew131.tkclothslot.TkClothSlot
+main: com.tonkaew131.tkclothslot.tkClothSlot
 api-version: '1.19'

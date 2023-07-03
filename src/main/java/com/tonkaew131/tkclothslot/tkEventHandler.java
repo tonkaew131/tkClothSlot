@@ -2,29 +2,54 @@ package com.tonkaew131.tkclothslot;
 
 import io.papermc.paper.event.player.PlayerInventorySlotChangeEvent;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
-public final class TkClothSlot extends JavaPlugin implements Listener {
-    @Override
-    public void onEnable() {
-        Bukkit.getPluginManager().registerEvents(this, this);
+public class tkEventHandler implements Listener {
+    public Map<String, Object>  config;
+    public tkEventHandler(Map<String, Object> config) {
+        this.config = config;
+    }
+
+    public void checkAndClearInventory(Player player) {
+        Inventory inventory = player.getInventory();
+
+        ArrayList<Integer> slotToRemoved = (ArrayList<Integer>) this.config.get("slot_locked");
+        ItemStack lockedItem = lockedItem();
+
+        // 39, 38, 37, 36: Helmet, Chestplate, Leggings, Boots
+
+        for (int i = 0; i <= slotToRemoved.size(); i++) {
+            if (inventory.getItem(i) != null && !isLockedItem(inventory.getItem(i))) {
+                player.getWorld().dropItemNaturally(player.getLocation(), inventory.getItem(i));
+            }
+
+            inventory.setItem(i, lockedItem);
+        }
+
+        player.updateInventory();
+    }
+
+    @EventHandler
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
+        ItemStack item = event.getItemDrop().getItemStack();
+        if(item != null && isLockedItem(item)) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
