@@ -4,6 +4,8 @@ import io.papermc.paper.event.player.PlayerInventorySlotChangeEvent;
 import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 
 import org.bukkit.event.EventHandler;
@@ -15,30 +17,42 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.Map;
 
 public class tkEventHandler implements Listener {
-    public Map<String, Object>  config;
-    public tkEventHandler(Map<String, Object> config) {
+    public Map<String, Object> config;
+    public Plugin plugin;
+
+    public tkEventHandler(Map<String, Object> config, Plugin pluginInstance) {
         this.config = config;
+        this.plugin = pluginInstance;
     }
 
     public void checkAndClearInventory(Player player) {
         Inventory inventory = player.getInventory();
 
         ArrayList<Integer> slotToRemoved = (ArrayList<Integer>) this.config.get("slot_locked");
+
         ItemStack lockedItem = lockedItem();
+        ItemStack lockedHotBar = getLockedHotBar();
 
         // 39, 38, 37, 36: Helmet, Chestplate, Leggings, Boots
+        // 0 - 8 Hot bar
 
         for (int i = 0; i <= slotToRemoved.size(); i++) {
             if (inventory.getItem(i) != null && !isLockedItem(inventory.getItem(i))) {
                 player.getWorld().dropItemNaturally(player.getLocation(), inventory.getItem(i));
             }
 
-            inventory.setItem(i, lockedItem);
+            if (i >= 0 && i <= 8) {
+                inventory.setItem(i, lockedHotBar);
+            } else {
+                inventory.setItem(i, lockedItem);
+            }
         }
 
         player.updateInventory();
@@ -47,7 +61,7 @@ public class tkEventHandler implements Listener {
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         ItemStack item = event.getItemDrop().getItemStack();
-        if(item != null && isLockedItem(item)) {
+        if (item != null && isLockedItem(item)) {
             event.setCancelled(true);
         }
     }
@@ -58,7 +72,7 @@ public class tkEventHandler implements Listener {
         Player player = event.getPlayer();
 
         // If Creative
-        if(player.getGameMode() == GameMode.CREATIVE) {
+        if (player.getGameMode() == GameMode.CREATIVE) {
             return;
         }
 
@@ -101,7 +115,7 @@ public class tkEventHandler implements Listener {
         }
 
         // If Creative
-        if(p.getGameMode() == GameMode.CREATIVE) {
+        if (p.getGameMode() == GameMode.CREATIVE) {
             return;
         }
 
@@ -117,7 +131,7 @@ public class tkEventHandler implements Listener {
         int slotChanged = event.getSlot();
 
         // If Creative
-        if(player.getGameMode() == GameMode.CREATIVE) {
+        if (player.getGameMode() == GameMode.CREATIVE) {
             return;
         }
 
@@ -245,13 +259,25 @@ public class tkEventHandler implements Listener {
         return lockedItem;
     }
 
+    ItemStack getLockedHotBar() {
+        ItemStack lockedItem = new ItemStack(Material.ECHO_SHARD);
+        ItemMeta lockedItemMeta = lockedItem.getItemMeta();
+        lockedItemMeta.displayName(Component.text(""));
+
+        NamespacedKey keyId = new NamespacedKey(this.plugin, "tkId");
+        lockedItemMeta.getPersistentDataContainer().set(keyId, PersistentDataType.STRING, (String) this.config.get("slot_hotbar_id"));
+
+        lockedItem.setItemMeta(lockedItemMeta);
+        return lockedItem;
+    }
+
     boolean isLockedItem(ItemStack item) {
         ItemMeta itemMeta = item.getItemMeta();
         if (itemMeta == null) {
             return false;
         }
 
-        if(item.getType() == Material.ECHO_SHARD) {
+        if (item.getType() == Material.ECHO_SHARD) {
             return true;
         }
 
