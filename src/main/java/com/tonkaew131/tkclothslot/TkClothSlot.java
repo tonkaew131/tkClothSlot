@@ -50,6 +50,14 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
 
             playerInventory.setItem(i, lockedItem);
         }
+
+        playerInventory.setItem(0, lockedItem);
+        playerInventory.setItem(1, lockedItem);
+        playerInventory.setItem(2, lockedItem);
+        playerInventory.setItem(6, lockedItem);
+        playerInventory.setItem(7, lockedItem);
+        playerInventory.setItem(8, lockedItem);
+
         int FREE_START = 27;
         int FREE_END = 30;
         for (int i = FREE_START; i <= FREE_END; i++) {
@@ -160,6 +168,13 @@ public final class TkClothSlot extends JavaPlugin implements Listener {
         for (int i = FREE_START; i <= FREE_END; i++) {
             slotToRemoved.remove(slotToRemoved.indexOf(i));
         }
+
+        slotToRemoved.add(0);
+        slotToRemoved.add(1);
+        slotToRemoved.add(2);
+        slotToRemoved.add(6);
+        slotToRemoved.add(7);
+        slotToRemoved.add(8);
 
         int SLOT_TO_ADDED[] = {9, 18, 10, 19, 11, 20, 12, 21, 13, 22, 14, 23, 15, 24, 16, 25, 17, 26};
         for (int i = 0; i < totalSlotRemoved; i++) {
